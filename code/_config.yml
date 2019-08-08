@@ -3,13 +3,19 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: whiteworker
-subtitle:
-description:
+title: White Worker
+subtitle: 终极打工仔
+description: A blog of White Worker A blog of White Worker A blog of White Worker A blog of White Worker
 keywords:
-author: whiteworker
-language: en
-timezone:
+  - blog
+  - .Net Core
+  - Kubernetes
+  - Istio
+author: White Worker
+avatar: /images/avatar.jpg
+favicon: /images/favicon.ico
+language: zh-CN
+timezone: Asia/Shanghai
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
@@ -73,7 +79,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: landscape
+theme: material-flow
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
