@@ -196,7 +196,18 @@ var customSearch;
 	// 		$hitokoto.css('color','white');
 	// 	}
 	// }
+	$.fn.followTo = function (pos, className) {
+		var $this = this,
+			$window = $(window);
 
+		$window.scroll(function (e) {
+			if ($window.scrollTop() > pos) {
+				$this.addClass(className);
+			} else {
+				$this.removeClass(className);
+			}
+		});
+	};
 
 	$(function () {
 		//set header
@@ -209,7 +220,7 @@ var customSearch;
 		setTocToggle();
 		// getHitokoto();
 		// getPicture();
-
+		$(".toc-wrapper").followTo(300, "fixed");
 
 		$(".article .video-container").fitVids();
 

@@ -13,7 +13,12 @@
 	<%- partial('categories',{post:post}) %>
 	</section>
 	<% if(post.toc!==false){ %>
-		<section class="toc-wrapper"><%- toc(post.content) %></section>
+		<section class="m_widget toc-wrapper">
+			<div class=" header fa fa-bookmark">目录</div>
+			<div class=" content">
+				<%- toc(post.content) %>
+			</div>
+		</section>
 	<% } %>
 	<section class="article typo">
   	<div class="article-entry" itemprop="articleBody">
