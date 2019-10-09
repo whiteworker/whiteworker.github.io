@@ -201,8 +201,6 @@ var customSearch;
 			$window = $(window);
 
 		$window.scroll(function (e) {
-			console.log(pos);
-			console.log($window);
 			if ($window.scrollTop() > pos) {
 				$("#toc_right").show();
 				$("#toc_right").addClass(className);
@@ -224,8 +222,16 @@ var customSearch;
 		setTocToggle();
 		// getHitokoto();
 		// getPicture();
-		$(".toc-wrapper").followTo(425, "fixed");
-
+		$(".toc-wrapper").followTo(425, "fixed");		
+		$("table").filter(function(){
+			return $(this).parent().is(":not(.highlight)");
+	  }).css('width', '100%');
+	  $("table tr td ").filter(function(){
+		return $(this).parent().is(":not(.highlight)");
+  }).css('border', '1px solid #242424');
+  $("table thead tr th ").filter(function(){
+	return $(this).parent().is(":not(.highlight)");
+}).css('border', '1px solid #242424');
 		$(".article .video-container").fitVids();
 
 		setTimeout(function () {
