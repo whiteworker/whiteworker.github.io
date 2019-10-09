@@ -20,6 +20,14 @@
 			</div>
 		</section>
 	<% } %>
+	<% if(post.toc!==false){ %>
+		<section id="toc_right" class="m_widget toc-wrapper" style="display:none;">
+			<div class=" header fa fa-bookmark">目录</div>
+			<div class=" content">
+				<%- toc(post.content) %>
+			</div>
+		</section>
+	<% } %>
 	<section class="article typo">
   	<div class="article-entry" itemprop="articleBody">
     	<%- post.content %>

@@ -201,10 +201,14 @@ var customSearch;
 			$window = $(window);
 
 		$window.scroll(function (e) {
+			console.log(pos);
+			console.log($window);
 			if ($window.scrollTop() > pos) {
-				$this.addClass(className);
+				$("#toc_right").show();
+				$("#toc_right").addClass(className);
 			} else {
-				$this.removeClass(className);
+				$("#toc_right").hide();
+				$("#toc_right").removeClass(className);
 			}
 		});
 	};
@@ -220,7 +224,7 @@ var customSearch;
 		setTocToggle();
 		// getHitokoto();
 		// getPicture();
-		$(".toc-wrapper").followTo(300, "fixed");
+		$(".toc-wrapper").followTo(425, "fixed");
 
 		$(".article .video-container").fitVids();
 
