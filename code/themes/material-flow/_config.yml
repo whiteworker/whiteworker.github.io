@@ -54,3 +54,8 @@ social:
 #   url: https://twitter.com/kevinsfork
 # - slug: rss
 # 	url: /atom.xml
+utterances:
+  enable: true
+  repo: whiteworker/whiteworker.github.io                  # owner/repo
+  issue_term: pathname   # pathname, url, title
+  theme: github-light    # github-light or github-dark

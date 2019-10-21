@@ -60,6 +60,16 @@
 			<div id="disqus_thread"></div>
 		</section>
 	<% } %>
+	<% if (theme.utterances.enable) { %>
+		<script src="https://utteranc.es/client.js"
+			 repo="whiteworker/whiteworker.github.io" # onwer/repo
+			 issue-term="pathname"   # 命名issue的格式，默认pathname
+			 label="Comment"         # 创建issue的tag，默认Comment
+			 theme="github-light"    # 评论系统theme，github-light或github-dark
+			 crossorigin="anonymous" # 跨域，默认
+			 async>
+	 </script>
+		<% } %>
 </article>
 <script>
 	window.subData = {
