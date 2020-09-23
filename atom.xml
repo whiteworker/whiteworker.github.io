@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>White Worker</title>
+  
+  <subtitle>White Worker</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://whiteworker.github.io/"/>
+  <updated>2020-09-23T03:54:34.084Z</updated>
+  <id>https://whiteworker.github.io/</id>
+  
+  <author>
+    <name>White Worker</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>初探 ASP.NET Core 3.0 Publish 与 docker容器化</title>
+    <link href="https://whiteworker.github.io/2019/10/09/%E5%88%9D%E6%8E%A2-asp-net-core-3.0-publish-&amp;-docker/"/>
+    <id>https://whiteworker.github.io/2019/10/09/初探-asp-net-core-3.0-publish-&amp;-docker/</id>
+    <published>2019-10-09T05:43:00.000Z</published>
+    <updated>2020-09-23T03:54:34.084Z</updated>
+    
+    <content type="html"><![CDATA[<p>[ASP.NET Core 3.0发布]<br>ASP.NET Core 3.0发布后，发布的机制改变了，可以直接发布可执行文件，Docker容器化体积也变小了，在这里初探一下这些改变和变化<br><b>注：Windows 和Docker publish 可能大小有些差异，但是整体趋势一致，这里偷懒使用的是windows发布 XD</b></p><a id="more"></a><h1 id="New-一个最简单的项目和发布"><a href="#New-一个最简单的项目和发布" class="headerlink" title="New 一个最简单的项目和发布"></a>New 一个最简单的项目和发布</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span>dotnet new mvc --auth None</span><br><span class="line"><span class="meta">$</span>dotnet publish -r centos.7-x64 -c Release</span><br></pre></td></tr></table></figure><p>发布完后大小为96.5 MB<br>这里为了快速测试，直接发布后拷贝</p><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> mcr.microsoft.com/dotnet/core/runtime:<span class="number">3.0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">WORKDIR</span> /app</span><br><span class="line"><span class="keyword">COPY</span> bin/Release/netcoreapp3.0/centos.7-x64/publish .</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">5000</span></span><br><span class="line"><span class="keyword">CMD</span> ["./dotnet3"]</span><br></pre></td></tr></table></figure><p><b> 走一个</b></p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t dotnet3:1.0.0 .</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span>docker images</span><br></pre></td></tr></table></figure><table><thead><tr><th align="center">REPOSITORY</th><th align="center">TAG</th><th align="center">SIZE</th></tr></thead><tbody><tr><td align="center">dotnet3</td><td align="center">1.0.0</td><td align="center">290MB</td></tr></tbody></table><p><b>还是那么臃肿，看看有没什么新特性可以改进一下</b></p><h1 id="改进"><a href="#改进" class="headerlink" title="改进"></a>改进</h1><h2 id="打开程序集链接分析"><a href="#打开程序集链接分析" class="headerlink" title="打开程序集链接分析"></a>打开程序集链接分析</h2><p>.NET core 3.0 SDK 随附了一种工具，可以通过分析 IL 并剪裁未使用的程序集来减小应用的大小。<br>dotnet3.csproj</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;PropertyGroup&gt;</span><br><span class="line">  &lt;PublishTrimmed&gt;true&lt;/PublishTrimmed&gt;</span><br><span class="line">&lt;/PropertyGroup&gt;</span><br></pre></td></tr></table></figure><p>或者在命令行加上</p><h2 id="这里顺便加上单个文件发布和自包含"><a href="#这里顺便加上单个文件发布和自包含" class="headerlink" title="这里顺便加上单个文件发布和自包含"></a>这里顺便加上单个文件发布和自包含</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span>dotnet publish -r centos.7-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true --self-contained true</span><br></pre></td></tr></table></figure><p>发布完后大小为56.7 MB</p><h2 id="镜像对比"><a href="#镜像对比" class="headerlink" title="镜像对比"></a>镜像对比</h2><p>这个将docker镜像替换成自包含的镜像，大小减少很多</p><blockquote><p>看看这两个镜像的分层就知道，mcr.microsoft.com/dotnet/core/runtime:3.0 的第一二层就是mcr.microsoft.com/dotnet/core/runtime-deps:3.0<br><img src="/images/imagescompare-001.png" alt="两者镜像比较图"></p></blockquote><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> mcr.microsoft.com/dotnet/core/runtime-deps:<span class="number">3.0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">WORKDIR</span> /app</span><br><span class="line"><span class="keyword">COPY</span> bin/Release/netcoreapp3.0/centos.7-x64/publish .</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">5000</span></span><br><span class="line"><span class="keyword">CMD</span> ["./dotnet3"]</span><br></pre></td></tr></table></figure><h2 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker build -t dotnet3:1.0.1 .</span><br><span class="line">docker run --rm --name dotnet3 -it -p 5000:5000 dotnet3:1.0.1</span><br></pre></td></tr></table></figure><table><thead><tr><th align="center">REPOSITORY</th><th align="center">TAG</th><th align="center">SIZE</th></tr></thead><tbody><tr><td align="center">dotnet3</td><td align="center">1.0.1</td><td align="center">170MB</td></tr><tr><td align="center">dotnet3</td><td align="center">1.0.0</td><td align="center">290MB</td></tr></tbody></table><blockquote><p>容器化相对于Dotnet Core2.2版本已经有很大进步了，但是相对于其他语言例如go语言，还是远远不足（golang build from scratch 静态编译只需 39M左右）</p></blockquote><h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://docs.microsoft.com/zh-cn/dotnet/core/whats-new/dotnet-core-3-0" target="_blank" rel="noopener">dotnet-core-3-0</a> </p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;[ASP.NET Core 3.0发布]&lt;br&gt;ASP.NET Core 3.0发布后，发布的机制改变了，可以直接发布可执行文件，Docker容器化体积也变小了，在这里初探一下这些改变和变化&lt;br&gt;&lt;b&gt;注：Windows 和Docker publish 可能大小有些差异，但是整体趋势一致，这里偷懒使用的是windows发布 XD&lt;/b&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="ASP.NET Core" scheme="https://whiteworker.github.io/categories/asp-net-core/"/>
+    
+    
+      <category term="ASP.NET Core" scheme="https://whiteworker.github.io/tags/asp-net-core/"/>
+    
+      <category term="C#" scheme="https://whiteworker.github.io/tags/c/"/>
+    
+      <category term="Docker" scheme="https://whiteworker.github.io/tags/docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>ASP.NET Core Serilog ElasticSearch Format</title>
+    <link href="https://whiteworker.github.io/2019/08/09/asp-net-core-serilog-elasticsearch-format/"/>
+    <id>https://whiteworker.github.io/2019/08/09/asp-net-core-serilog-elasticsearch-format/</id>
+    <published>2019-08-09T05:35:53.000Z</published>
+    <updated>2020-09-23T03:54:34.082Z</updated>
+    
+    <content type="html"><![CDATA[<p>[ASP.NET Core 使用Serilog Format ElasticSearch]<br>在使用微服务框架EFK收集ASP.NET Core日志的时候，默认Console.Log 打印出来的Log被ElasticSearch+Fluentd收集后颜色属性会产生乱码（低版本ES会直接报错)<br>本篇将介绍 使用Serilog的ElasticSearch Format收集日志</p><a id="more"></a><h2 id="1-安装NuGet包"><a href="#1-安装NuGet包" class="headerlink" title="1. 安装NuGet包"></a>1. 安装NuGet包</h2><p>dotnet add package Serilog.AspNetCore<br>dotnet add package Serilog.Sinks.Console<br>dotnet add package Serilog.Sinks.ElasticSearch</p><h2 id="2-Startup"><a href="#2-Startup" class="headerlink" title="2. Startup"></a>2. Startup</h2><p>Program.cs</p><figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> IWebHostBuilder <span class="title">CreateWebHostBuilder</span>(<span class="params"><span class="keyword">string</span>[] args</span>)</span> =&gt;</span><br><span class="line">    WebHost.CreateDefaultBuilder(args)</span><br><span class="line">    .UseSerilog((ctx, config) =&gt;</span><br><span class="line">&#123;</span><br><span class="line">    config</span><br><span class="line">        .MinimumLevel.Information()</span><br><span class="line">        .Enrich.FromLogContext();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ctx.HostingEnvironment.IsDevelopment())</span><br><span class="line">    &#123;</span><br><span class="line">        config.WriteTo.Console();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        config.WriteTo.Console(<span class="keyword">new</span> ElasticsearchJsonFormatter());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://andrewlock.net/writing-logs-to-elasticsearch-with-fluentd-using-serilog-in-asp-net-core/" target="_blank" rel="noopener">writing-logs-to-elasticsearch-with-fluentd-using-serilog-in-asp-net-core</a> </p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;[ASP.NET Core 使用Serilog Format ElasticSearch]&lt;br&gt;在使用微服务框架EFK收集ASP.NET Core日志的时候，默认Console.Log 打印出来的Log被ElasticSearch+Fluentd收集后颜色属性会产生乱码（低版本ES会直接报错)&lt;br&gt;本篇将介绍 使用Serilog的ElasticSearch Format收集日志&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="ASP.NET Core" scheme="https://whiteworker.github.io/categories/asp-net-core/"/>
+    
+    
+      <category term="ASP.NET Core" scheme="https://whiteworker.github.io/tags/asp-net-core/"/>
+    
+      <category term="C#" scheme="https://whiteworker.github.io/tags/c/"/>
+    
+      <category term="Log" scheme="https://whiteworker.github.io/tags/log/"/>
+    
+      <category term="ElasticSearch" scheme="https://whiteworker.github.io/tags/elasticsearch/"/>
+    
+      <category term="Serilog" scheme="https://whiteworker.github.io/tags/serilog/"/>
+    
+  </entry>
+  
+</feed>
